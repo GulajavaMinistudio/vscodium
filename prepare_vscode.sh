@@ -2,11 +2,6 @@
 
 set -e
 
-if [[ "$CI_WINDOWS" == "True" ]]; then
-  export npm_config_arch="$BUILDARCH"
-  export npm_config_target_arch="$BUILDARCH"
-fi
-
 cp -rp src/* vscode/
 cd vscode || exit
 
@@ -14,14 +9,13 @@ cd vscode || exit
 
 # apply patches
 patch -u src/vs/platform/update/electron-main/updateService.win32.ts -i ../patches/update-cache-path.patch
-patch -u resources/linux/rpm/code.spec.template -i ../patches/no-replace-product-json.patch
+patch -u resources/linux/rpm/code.spec.template -i ../patches/fix-rpm-spec.patch
 
 if [[ "$OS_NAME" == "osx" ]]; then
   CHILD_CONCURRENCY=1 yarn --frozen-lockfile --ignore-optional
   npm_config_argv='{"original":["--ignore-optional"]}' yarn postinstall
 else
   CHILD_CONCURRENCY=1 yarn --frozen-lockfile
-  yarn postinstall
 fi
 
 mv product.json product.json.bak
@@ -72,8 +66,8 @@ if [[ "$OS_NAME" == "linux" ]]; then
   
   # fix the packages metadata
   # code.appdata.xml
-  sed -i 's|Visual Studio Code|VSCodium|g' src/resources/linux/code.appdata.xml
-  sed -i 's|https://code.visualstudio.com/docs/setup/linux|https://github.com/VSCodium/vscodium#download-install|' src/resources/linux/code.appdata.xml
+  sed -i 's|Visual Studio Code|VSCodium|g' resources/linux/code.appdata.xml
+  sed -i 's|https://code.visualstudio.com/docs/setup/linux|https://github.com/VSCodium/vscodium#download-install|' resources/linux/code.appdata.xml
   sed -i 's|https://code.visualstudio.com/home/home-screenshot-linux-lg.png|https://vscodium.com/img/vscodium.png|' resources/linux/code.appdata.xml
   sed -i 's|https://code.visualstudio.com|https://vscodium.com|' resources/linux/code.appdata.xml
   

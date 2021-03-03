@@ -1,4 +1,4 @@
-name: linux_build
+name: windows_build
 
 on:
   schedule:
@@ -8,28 +8,15 @@ on:
     branches: [ master ]
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
-    container: 
-      image: ${{ matrix.image }}
-      env:
-        OS_NAME: 'linux'
-        VSCODE_ARCH: ${{ matrix.vscode_arch }}
-
+  windows:
+    runs-on: windows-2016
+    env:
+      VSCODE_ARCH: ${{ matrix.vscode_arch }}
+      OS_NAME: 'windows'
     strategy:
       fail-fast: false
       matrix:
-        vscode_arch: [x64, arm64, armhf]
-        include:
-        - vscode_arch: x64
-          npm_arch: x64
-          image: vscodium/vscodium-linux-build-agent:bionic-x64
-        - vscode_arch: arm64
-          npm_arch: arm64
-          image: vscodium/vscodium-linux-build-agent:stretch-arm64
-        - vscode_arch: armhf
-          npm_arch: armv7l
-          image: vscodium/vscodium-linux-build-agent:stretch-armhf
+        vscode_arch: [x64, ia32, arm64]
 
     steps:
       - uses: actions/checkout@v2
@@ -37,34 +24,46 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v1
         with:
-          node-version: 12.14.1
+          node-version: 12.18.3
 
       - name: Install Yarn
         run: npm install -g yarn
 
+      - name: Setup Python 2
+        uses: actions/setup-python@v2
+        with:
+          python-version: '2.x'
+
       - name: Clone VSCode repo
         run: ./get_repo.sh
+        shell: bash
 
       - name: Check existing VSCodium tags/releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./check_tags.sh
+        shell: bash
 
       - name: Build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm_config_arch: ${{ matrix.npm_arch }}
+          npm_config_arch: ${{ matrix.vscode_arch }}
+          npm_config_target_arch: ${{ matrix.vscode_arch }}
         run: ./build.sh
+        shell: bash
         if: env.SHOULD_BUILD == 'yes'
 
-      - name: Zip release
+      - name: Move/rename build artifacts
         run: |
-          cd VSCode-linux-${VSCODE_ARCH}
-          tar czf ../VSCodium-linux-${VSCODE_ARCH}-${LATEST_MS_TAG}.tar.gz .
+          mv vscode\\.build\\win32-${VSCODE_ARCH}\\system-setup\\VSCodeSetup.exe VSCodiumSetup-${VSCODE_ARCH}-${LATEST_MS_TAG}.exe
+          mv vscode\\.build\\win32-${VSCODE_ARCH}\\user-setup\\VSCodeSetup.exe VSCodiumUserSetup-${VSCODE_ARCH}-${LATEST_MS_TAG}.exe
+          mv vscode\\.build\\win32-${VSCODE_ARCH}\\archive\\VSCode-win32-${VSCODE_ARCH}.zip VSCodium-win32-${VSCODE_ARCH}-${LATEST_MS_TAG}.zip
+        shell: bash
         if: env.SHOULD_BUILD == 'yes'
 
       - name: Generate shasums
         run: ./sum.sh
+        shell: bash
         if: env.SHOULD_BUILD == 'yes'
       
       - name: Release
@@ -74,18 +73,16 @@ jobs:
           tag_name: ${{ env.LATEST_MS_TAG }}
           files: |
             ./*.sha256
-            ./*.zip
-            ./*.tar.gz
-            ./*.deb
-            ./*.rpm
-            ./*.AppImage
-            ./*.AppImage.zsync
+            ./VSCodium*.zip
+            ./VSCodiumUserSetup*.exe
+            ./VSCodiumSetup*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update versions repo
         if: env.SHOULD_BUILD == 'yes'
         run: ./update_version.sh
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.STRONGER_GITHUB_TOKEN }}
           GITHUB_USERNAME: ${{ github.repository_owner }}
