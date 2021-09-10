@@ -9,9 +9,12 @@
   - [Proprietary Debugging Tools](#proprietary-debugging-tools)
   - [Proprietary Extensions](#proprietary-extensions)
 - [Migrating from Visual Studio Code to VSCodium](#migrating)
+- [Sign in with GitHub](#signin-github)
 - [How do I run VSCodium in portable mode?](#portable)
 - [How do I press and hold a key and have it repeat in VSCodium?](#press-and-hold)
 - [How do I open VSCodium from the terminal?](#terminal-support)
+  - [From Linux .tar.gz](#from-linux-targz)
+- [How to build VSCodium](https://github.com/VSCodium/vscodium/blob/master/docs/build.md)
 
 ## <a id="disable-telemetry"></a>Getting all the Telemetry Out
 
@@ -120,6 +123,16 @@ To copy your settings manually:
 - Click the three dots `...` and choose 'Open settings.json'
 - Copy the contents of settings.json into the same place in VSCodium
 
+## <a id="signin-github"></a>Sign in with GitHub
+
+In VSCodium, `Sign in with GitHub` is using a Personal Access Token.<br />
+Follow the documentation https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token to create your token.<br />
+Select the scopes dependending of the extension which need access to GitHub. (GitLens requires the `repo` scope.)
+
+### Linux
+
+If you are getting the error `Writing login information to the keychain failed with error 'The name org.freedesktop.secrets was not provided by any .service files'.`, you need to install the package `gnome-keyring`.
+
 ## <a id="portable"></a>How do I run VSCodium in portable mode?
 You can follow the [Portable Mode instructions](https://code.visualstudio.com/docs/editor/portable) from the Visual Studio Code website. 
 - **Windows** / **Linux** : the instructions can be followed as written.
@@ -135,6 +148,7 @@ $ defaults write com.visualstudio.code.oss ApplePressAndHoldEnabled -bool false
 
 ## <a id="terminal-support"></a>How do I open VSCodium from the terminal?
 
+For MacOS and Windows:
 - Go to the command palette (View | Command Palette...)
 - Choose `Shell command: Install 'codium' command in PATH`.
 
@@ -148,3 +162,9 @@ This allows you to open files or directories in VSCodium directly from your term
 ```
 
 Feel free to alias this command to something easier to type in your shell profile (e.g. `alias code=codium`).
+
+On Linux, when installed with a package manager, `codium` has been installed in your `PATH`.
+
+### <a id="from-linux-targz"></a>From Linux .tar.gz
+
+When the archive `VSCodium-linux-<arch>-<version>.tar.gz` is extracted, the main entry point for VSCodium is `./bin/codium`.
