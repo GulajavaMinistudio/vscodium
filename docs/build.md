@@ -11,7 +11,7 @@
 
 ## <a id="dependencies"></a>Dependencies
 
-- node 14
+- node 16
 - yarn
 - jq
 - git
@@ -40,7 +40,7 @@
 - sed
 - 7z
 - [WiX Toolset](http://wixtoolset.org/releases/)
-- python2
+- python3
 - 'Tools for Native Modules' from official Node.js installer
 
 ## <a id="build-scripts"></a>Build Scripts
@@ -62,7 +62,7 @@ docker run -ti --volume=<local vscodium source>:/root/vscodium --name=vscodium-b
 
 When inside the container, you can use the following commands to build:
 ```
-curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 sudo apt-get install -y nodejs desktop-file-utils
 
 npm install -g yarn

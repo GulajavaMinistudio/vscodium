@@ -8,11 +8,14 @@
 <div id="badges" align="center">
 
 [![current release](https://img.shields.io/github/release/vscodium/vscodium.svg)](https://github.com/vscodium/vscodium/releases)
-[![windows_build_status](https://dev.azure.com/vscodium/VSCodium/_apis/build/status/VSCodium.vscodium?branchName=master)](https://dev.azure.com/vscodium/VSCodium/_build?definitionId=1)
 [![license](https://img.shields.io/github/license/VSCodium/vscodium.svg)](https://github.com/VSCodium/vscodium/blob/master/LICENSE)
 [![Gitter](https://img.shields.io/gitter/room/vscodium/vscodium.svg)](https://gitter.im/VSCodium/Lobby)
 [![codium](https://snapcraft.io//codium/badge.svg)](https://snapcraft.io/codium)
 [![codium](https://snapcraft.io//codium/trending.svg?name=0)](https://snapcraft.io/codium)
+
+[![build status (linux)](https://img.shields.io/github/workflow/status/VSCodium/vscodium/linux_build/master?label=build%28linux%29)](https://github.com/VSCodium/vscodium/actions/workflows/linux.yml?query=branch%3Amaster)
+[![build status (macos)](https://img.shields.io/github/workflow/status/VSCodium/vscodium/macos_build/master?label=build%28macos%29)](https://github.com/VSCodium/vscodium/actions/workflows/macos.yml?query=branch%3Amaster)
+[![build status (windows)](https://img.shields.io/github/workflow/status/VSCodium/vscodium/windows_build/master?label=build%28windows%29)](https://github.com/VSCodium/vscodium/actions/workflows/windows.yml?query=branch%3Amaster)
 
 </div>
 
@@ -102,11 +105,13 @@ This repo exists so that you don't have to download+build from source. The build
 
 If you want to build from source yourself, head over to [Microsoft's vscode repo](https://github.com/Microsoft/vscode) and follow their [instructions](https://github.com/Microsoft/vscode/wiki/How-to-Contribute#build-and-run). This repo exists to make it easier to get the latest version of MIT-licensed VS Code.
 
-Microsoft's build process (which we are running to build the binaries) does download additional files. This was brought up in [Microsoft/vscode#49159](https://github.com/Microsoft/vscode/issues/49159) and [Microsoft/vscode#45978](https://github.com/Microsoft/vscode/issues/45978). These are the packages downloaded during build:
+Microsoft's build process (which we are running to build the binaries) does download additional files. This was brought up in [Microsoft/vscode#141340](https://github.com/Microsoft/vscode/issues/141340) and [Microsoft/vscode#45978](https://github.com/Microsoft/vscode/issues/45978). These are the packages downloaded during build:
 
 - Extensions from the Microsoft Marketplace:
-  - [ms-vscode.node-debug2](https://marketplace.visualstudio.com/items?itemName=ms-vscode.node-debug2)
-  - [ms-vscode.node-debug](https://marketplace.visualstudio.com/items?itemName=ms-vscode.node-debug)
+  - [ms-vscode.references-view](https://marketplace.visualstudio.com/items?itemName=ms-vscode.references-view)
+  - [ms-vscode.js-debug-companion](https://marketplace.visualstudio.com/items?itemName=ms-vscode.js-debug-companion)
+  - [ms-vscode.js-debug](https://marketplace.visualstudio.com/items?itemName=ms-vscode.js-debug)
+  - [ms-vscode.vscode-js-profile-table](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-js-profile-table)
 - From [Electron releases](https://github.com/electron/electron/releases) (using [gulp-atom-electron](https://github.com/joaomoreno/gulp-atom-electron))
   - electron
   - ffmpeg
@@ -127,7 +132,7 @@ If you would like to see the commands we run to build `vscode` into VSCodium bin
 The builds are run every day, but exit early if there isn't a new release from Microsoft.
 
 ## <a id="supported-platforms"></a>Supported Platforms
-The minimal version is limitted by the core component Electron, you may want to check its [supported platform list](https://www.electronjs.org/docs/tutorial/support#supported-platforms).
+The minimal version is limited by the core component Electron, you may want to check its [supported platform list](https://www.electronjs.org/docs/tutorial/support#supported-platforms).
 - [x] macOS (`zip`, `dmg`) OS X 10.10 or newer x64
 - [x] macOS (`zip`, `dmg`) macOS 11.0 or newer arm64 via x64 emulation, see [status issue](https://github.com/VSCodium/vscodium/issues/597)
 - [x] GNU/Linux x64 (`deb`, `rpm`, `AppImage`, `tar.gz`)
