@@ -8,18 +8,18 @@ if [[ -z "${GITHUB_TOKEN}" ]]; then
 fi
 
 REPOSITORY="${GITHUB_REPOSITORY:-"VSCodium/vscodium"}"
-GITHUB_RESPONSE=$( curl -s -H "Authorization: token ${GITHUB_TOKEN}" https://api.github.com/repos/${REPOSITORY}/releases/tags/${MS_TAG})
+GITHUB_RESPONSE=$( curl -s -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/${REPOSITORY}/releases/tags/${MS_TAG}")
 VSCODIUM_ASSETS=$( echo "${GITHUB_RESPONSE}" | jq -c '.assets | map(.name)?' )
 
 contains() {
   # add " to match the end of a string so any hashs won't be matched by mistake
-  echo "${VSCODIUM_ASSETS}" | grep "$1\""
+  echo "${VSCODIUM_ASSETS}" | grep "${1}\""
 }
 
 if [ "${VSCODIUM_ASSETS}" != "null" ]; then
   # macos
   if [[ "${OS_NAME}" == "osx" ]]; then
-    if [[ -z $( contains "darwin-${VSCODE_ARCH}-${MS_TAG}.zip" ) ]]; then
+    if [[ -z $( contains "VSCodium-darwin-${VSCODE_ARCH}-${MS_TAG}.zip" ) ]]; then
       echo "Building on MacOS because we have no ZIP"
       export SHOULD_BUILD="yes"
     else
@@ -31,6 +31,13 @@ if [ "${VSCODIUM_ASSETS}" != "null" ]; then
       export SHOULD_BUILD="yes"
     else
       export SHOULD_BUILD_DMG="no"
+    fi
+
+    if [[ -z $( contains "vscodium-reh-darwin-${VSCODE_ARCH}-${MS_TAG}.tar.gz" ) ]]; then
+      echo "Building on MacOS because we have no REH archive"
+      export SHOULD_BUILD="yes"
+    else
+      export SHOULD_BUILD_REH="no"
     fi
 
     if [[ "${SHOULD_BUILD}" != "yes" ]]; then
@@ -54,12 +61,14 @@ if [ "${VSCODIUM_ASSETS}" != "null" ]; then
         export SHOULD_BUILD_EXE_USR="no"
       fi
 
-      if [[ -z $( contains "win32-${VSCODE_ARCH}-${MS_TAG}.zip" ) ]]; then
+      if [[ -z $( contains "VSCodium-win32-${VSCODE_ARCH}-${MS_TAG}.zip" ) ]]; then
         echo "Building on Windows arm64 because we have no zip"
         export SHOULD_BUILD="yes"
       else
         export SHOULD_BUILD_ZIP="no"
       fi
+
+      export SHOULD_BUILD_REH="no"
 
       if [[ "${SHOULD_BUILD}" != "yes" ]]; then
         echo "Already have all the Windows arm64 builds"
@@ -81,7 +90,7 @@ if [ "${VSCODIUM_ASSETS}" != "null" ]; then
         export SHOULD_BUILD_EXE_USR="no"
       fi
 
-      if [[ -z $( contains "win32-${VSCODE_ARCH}-${MS_TAG}.zip" ) ]]; then
+      if [[ -z $( contains "VSCodium-win32-${VSCODE_ARCH}-${MS_TAG}.zip" ) ]]; then
         echo "Building on Windows ia32 because we have no zip"
         export SHOULD_BUILD="yes"
       else
@@ -100,6 +109,13 @@ if [ "${VSCODIUM_ASSETS}" != "null" ]; then
         export SHOULD_BUILD="yes"
       else
         export SHOULD_BUILD_MSI_NOUP="no"
+      fi
+
+      if [[ -z $( contains "vscodium-reh-win32-${VSCODE_ARCH}-${MS_TAG}.tar.gz" ) ]]; then
+        echo "Building on Windows ia32 because we have no REH archive"
+        export SHOULD_BUILD="yes"
+      else
+        export SHOULD_BUILD_REH="no"
       fi
 
       if [[ "${SHOULD_BUILD}" != "yes" ]]; then
@@ -122,7 +138,7 @@ if [ "${VSCODIUM_ASSETS}" != "null" ]; then
         export SHOULD_BUILD_EXE_USR="no"
       fi
 
-      if [[ -z $( contains "win32-${VSCODE_ARCH}-${MS_TAG}.zip" ) ]]; then
+      if [[ -z $( contains "VSCodium-win32-${VSCODE_ARCH}-${MS_TAG}.zip" ) ]]; then
         echo "Building on Windows x64 because we have no zip"
         export SHOULD_BUILD="yes"
       else
@@ -141,6 +157,13 @@ if [ "${VSCODIUM_ASSETS}" != "null" ]; then
         export SHOULD_BUILD="yes"
       else
         export SHOULD_BUILD_MSI_NOUP="no"
+      fi
+
+      if [[ -z $( contains "vscodium-reh-win32-${VSCODE_ARCH}-${MS_TAG}.tar.gz" ) ]]; then
+        echo "Building on Windows x64 because we have no REH archive"
+        export SHOULD_BUILD="yes"
+      else
+        export SHOULD_BUILD_REH="no"
       fi
 
       if [[ "${SHOULD_BUILD}" != "yes" ]]; then
@@ -165,11 +188,18 @@ if [ "${VSCODIUM_ASSETS}" != "null" ]; then
         export SHOULD_BUILD_RPM="no"
       fi
 
-      if [[ -z $( contains "arm64-${MS_TAG}.tar.gz" ) ]]; then
+      if [[ -z $( contains "VSCodium-linux-arm64-${MS_TAG}.tar.gz" ) ]]; then
         echo "Building on Linux arm64 because we have no TAR"
         export SHOULD_BUILD="yes"
       else
         export SHOULD_BUILD_TAR="no"
+      fi
+
+      if [[ -z $( contains "vscodium-reh-linux-arm64-${MS_TAG}.tar.gz" ) ]]; then
+        echo "Building on Linux arm64 because we have no REH archive"
+        export SHOULD_BUILD="yes"
+      else
+        export SHOULD_BUILD_REH="no"
       fi
 
       export SHOULD_BUILD_APPIMAGE="no"
@@ -194,11 +224,18 @@ if [ "${VSCODIUM_ASSETS}" != "null" ]; then
         export SHOULD_BUILD_RPM="no"
       fi
 
-      if [[ -z $( contains "armhf-${MS_TAG}.tar.gz" ) ]]; then
+      if [[ -z $( contains "VSCodium-linux-armhf-${MS_TAG}.tar.gz" ) ]]; then
         echo "Building on Linux arm because we have no TAR"
         export SHOULD_BUILD="yes"
       else
         export SHOULD_BUILD_TAR="no"
+      fi
+
+      if [[ -z $( contains "vscodium-reh-linux-armhf-${MS_TAG}.tar.gz" ) ]]; then
+        echo "Building on Linux arm because we have no REH archive"
+        export SHOULD_BUILD="yes"
+      else
+        export SHOULD_BUILD_REH="no"
       fi
 
       export SHOULD_BUILD_APPIMAGE="no"
@@ -223,7 +260,7 @@ if [ "${VSCODIUM_ASSETS}" != "null" ]; then
         export SHOULD_BUILD_RPM="no"
       fi
 
-      if [[ -z $( contains "x64-${MS_TAG}.tar.gz" ) ]]; then
+      if [[ -z $( contains "VSCodium-linux-x64-${MS_TAG}.tar.gz" ) ]]; then
         echo "Building on Linux x64 because we have no TAR"
         export SHOULD_BUILD="yes"
       else
@@ -235,6 +272,13 @@ if [ "${VSCODIUM_ASSETS}" != "null" ]; then
         export SHOULD_BUILD="yes"
       else
         export SHOULD_BUILD_APPIMAGE="no"
+      fi
+
+      if [[ -z $( contains "vscodium-reh-linux-x64-${MS_TAG}.tar.gz" ) ]]; then
+        echo "Building on Linux x64 because we have no REH archive"
+        export SHOULD_BUILD="yes"
+      else
+        export SHOULD_BUILD_REH="no"
       fi
 
       if [[ "${SHOULD_BUILD}" != "yes" ]]; then
@@ -255,6 +299,7 @@ echo "SHOULD_BUILD_EXE_SYS=${SHOULD_BUILD_EXE_SYS}" >> "${GITHUB_ENV}"
 echo "SHOULD_BUILD_EXE_USR=${SHOULD_BUILD_EXE_USR}" >> "${GITHUB_ENV}"
 echo "SHOULD_BUILD_MSI=${SHOULD_BUILD_MSI}" >> "${GITHUB_ENV}"
 echo "SHOULD_BUILD_MSI_NOUP=${SHOULD_BUILD_MSI_NOUP}" >> "${GITHUB_ENV}"
+echo "SHOULD_BUILD_REH=${SHOULD_BUILD_REH}" >> "${GITHUB_ENV}"
 echo "SHOULD_BUILD_RPM=${SHOULD_BUILD_RPM}" >> "${GITHUB_ENV}"
 echo "SHOULD_BUILD_TAR=${SHOULD_BUILD_TAR}" >> "${GITHUB_ENV}"
 echo "SHOULD_BUILD_ZIP=${SHOULD_BUILD_ZIP}" >> "${GITHUB_ENV}"

@@ -5,7 +5,7 @@ set -e
 cp -rp src/* vscode/
 cp -f LICENSE vscode/LICENSE.txt
 
-cd vscode || exit
+cd vscode || { echo "'vscode' dir not found"; exit 1; }
 
 ../update_settings.sh
 
@@ -13,21 +13,21 @@ cd vscode || exit
 { set +x; } 2>/dev/null
 
 for file in ../patches/*.patch; do
-  if [ -f "$file" ]; then
-    echo applying patch: $file;
-    git apply --ignore-whitespace "$file"
+  if [ -f "${file}" ]; then
+    echo applying patch: "${file}";
+    git apply --ignore-whitespace "${file}"
     if [ $? -ne 0 ]; then
-      echo failed to apply patch $file 1>&2
+      echo failed to apply patch "${file}" 1>&2
     fi
   fi
 done
 
 for file in ../patches/user/*.patch; do
-  if [ -f "$file" ]; then
-    echo applying user patch: $file;
-    git apply --ignore-whitespace "$file"
+  if [ -f "${file}" ]; then
+    echo applying user patch: "${file}";
+    git apply --ignore-whitespace "${file}"
     if [ $? -ne 0 ]; then
-      echo failed to apply patch $file 1>&2
+      echo failed to apply patch "${file}" 1>&2
     fi
   fi
 done
@@ -35,8 +35,8 @@ done
 set -x
 
 if [[ "${OS_NAME}" == "osx" ]]; then
-  CHILD_CONCURRENCY=1 yarn --frozen-lockfile --ignore-optional
-  npm_config_argv='{"original":["--ignore-optional"]}' yarn postinstall
+  CHILD_CONCURRENCY=1 yarn --frozen-lockfile
+  yarn postinstall
 elif [[ "${npm_config_arch}" == "armv7l" || "${npm_config_arch}" == "ia32" ]]; then
   # node-gyp@9.0.0 shipped with node@16.15.0 starts using config.gypi
   # from the custom headers path if dist-url option was set instead of
@@ -80,11 +80,12 @@ win32AppUserModelId='setpath(["win32AppUserModelId"]; "Microsoft.VSCodium")'
 win32ShellNameShort='setpath(["win32ShellNameShort"]; "VSCodium")'
 win32x64UserAppId='setpath (["win32x64UserAppId"]; "{{2E1F05D1-C245-4562-81EE-28188DB6FD17}")'
 urlProtocol='setpath(["urlProtocol"]; "vscodium")'
-serverDataFolderName='setpath(["serverDataFolderName"]; ".vscode-server-oss")'
+serverApplicationName='setpath(["serverApplicationName"]; "codium-server")'
+serverDataFolderName='setpath(["serverDataFolderName"]; ".vscodium-server")'
 reportIssueUrl='setpath(["reportIssueUrl"]; "https://github.com/VSCodium/vscodium/issues/new")'
 licenseUrl='setpath(["licenseUrl"]; "https://github.com/VSCodium/vscodium/blob/master/LICENSE")'
 
-product_json_changes="${checksumFailMoreInfoUrl} | ${tipsAndTricksUrl} | ${twitterUrl} | ${requestFeatureUrl} | ${documentationUrl} | ${introductoryVideosUrl} | ${updateUrl} | ${releaseNotesUrl} | ${keyboardShortcutsUrlMac} | ${keyboardShortcutsUrlLinux} | ${keyboardShortcutsUrlWin} | ${quality} | ${extensionsGallery} | ${linkProtectionTrustedDomains} | ${nameShort} | ${nameLong} | ${linuxIconName} | ${applicationName} | ${win32MutexName} | ${win32DirName} | ${win32NameVersion} | ${win32RegValueName} | ${win32AppUserModelId} | ${win32ShellNameShort} | ${win32x64UserAppId} | ${urlProtocol} | ${serverDataFolderName} | ${reportIssueUrl} | ${licenseUrl}"
+product_json_changes="${checksumFailMoreInfoUrl} | ${tipsAndTricksUrl} | ${twitterUrl} | ${requestFeatureUrl} | ${documentationUrl} | ${introductoryVideosUrl} | ${updateUrl} | ${releaseNotesUrl} | ${keyboardShortcutsUrlMac} | ${keyboardShortcutsUrlLinux} | ${keyboardShortcutsUrlWin} | ${quality} | ${extensionsGallery} | ${linkProtectionTrustedDomains} | ${nameShort} | ${nameLong} | ${linuxIconName} | ${applicationName} | ${win32MutexName} | ${win32DirName} | ${win32NameVersion} | ${win32RegValueName} | ${win32AppUserModelId} | ${win32ShellNameShort} | ${win32x64UserAppId} | ${urlProtocol} | ${serverApplicationName} | ${serverDataFolderName} | ${reportIssueUrl} | ${licenseUrl}"
 cat product.json.bak | jq "${product_json_changes}" > product.json.tmp
 
 jq -s '.[0] * .[1]' product.json.tmp ../product.json > product.json
@@ -94,7 +95,7 @@ cat product.json
 
 ../undo_telemetry.sh
 
-if [[ "$OS_NAME" == "linux" ]]; then
+if [[ "${OS_NAME}" == "linux" ]]; then
   # microsoft adds their apt repo to sources
   # unless the app name is code-oss
   # as we are renaming the application to vscodium

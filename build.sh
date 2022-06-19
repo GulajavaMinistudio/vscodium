@@ -10,7 +10,7 @@ if [[ "${SHOULD_BUILD}" == "yes" ]]; then
 
   . prepare_vscode.sh
 
-  cd vscode || exit
+  cd vscode || { echo "'vscode' dir not found"; exit 1; }
 
   yarn monaco-compile-check
   yarn valid-layers-check
@@ -22,6 +22,10 @@ if [[ "${SHOULD_BUILD}" == "yes" ]]; then
 
   if [[ "${OS_NAME}" == "osx" ]]; then
     yarn gulp "vscode-darwin-${VSCODE_ARCH}-min-ci"
+
+    find "../VSCode-darwin-${VSCODE_ARCH}" -exec touch {} \;
+
+    VSCODE_PLATFORM="darwin"
   elif [[ "${OS_NAME}" == "windows" ]]; then
     . ../build/windows/rtf/make.sh
 
@@ -48,9 +52,15 @@ if [[ "${SHOULD_BUILD}" == "yes" ]]; then
       if [[ "${SHOULD_BUILD_MSI_NOUP}" != "no" ]]; then
         . ../build/windows/msi/build-updates-disabled.sh
       fi
+    else
+      SHOULD_BUILD_REH="no"
     fi
+
+    VSCODE_PLATFORM="win32"
   else # linux
     yarn gulp "vscode-linux-${VSCODE_ARCH}-min-ci"
+
+    find "../VSCode-linux-${VSCODE_ARCH}" -exec touch {} \;
 
     if [[ "${SKIP_LINUX_PACKAGES}" != "True" ]]; then
       if [[ "${SHOULD_BUILD_DEB}" != "no" || "${SHOULD_BUILD_APPIMAGE}" != "no" ]]; then
@@ -65,6 +75,13 @@ if [[ "${SHOULD_BUILD}" == "yes" ]]; then
         . ../build/linux/appimage/build.sh
       fi
     fi
+
+    VSCODE_PLATFORM="linux"
+  fi
+
+  if [[ "${SHOULD_BUILD_REH}" != "no" ]]; then
+    yarn gulp minify-vscode-reh
+    yarn gulp "vscode-reh-${VSCODE_PLATFORM}-${VSCODE_ARCH}-min-ci"
   fi
 
   cd ..
