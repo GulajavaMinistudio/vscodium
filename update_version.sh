@@ -23,15 +23,19 @@ fi
 #  }
 
 # `url` is URL_BASE + filename of asset e.g.
-#    darwin: https://github.com/VSCodium/vscodium/releases/download/${MS_TAG}/VSCodium-darwin-${MS_TAG}.zip
-# `name` is $MS_TAG
-# `version` is $MS_COMMIT
-# `productVersion` is $MS_TAG
+#    darwin: https://github.com/VSCodium/vscodium/releases/download/${RELEASE_VERSION}/VSCodium-darwin-${RELEASE_VERSION}.zip
+# `name` is $RELEASE_VERSION
+# `version` is $BUILD_SOURCEVERSION
+# `productVersion` is $RELEASE_VERSION
 # `hash` in <filename>.sha1
 # `timestamp` is $(node -e 'console.log(Date.now())')
 # `sha256hash` in <filename>.sha256
 
-URL_BASE="https://github.com/VSCodium/vscodium/releases/download/${MS_TAG}"
+if [[ "${VSCODE_QUALITY}" == "insider" ]]; then
+  URL_BASE="https://github.com/VSCodium/vscodium-insiders/releases/download/${RELEASE_VERSION}"
+else
+  URL_BASE="https://github.com/VSCodium/vscodium/releases/download/${RELEASE_VERSION}"
+fi
 
 # to make testing on forks easier
 VERSIONS_REPO="${GITHUB_USERNAME}/versions"
@@ -42,14 +46,14 @@ generateJson() {
 
   # generate parts
   local url="${URL_BASE}/${ASSET_NAME}"
-  local name="${MS_TAG}"
-  local version="${MS_COMMIT}"
-  local productVersion="${MS_TAG}"
+  local name="${RELEASE_VERSION}"
+  local version="${BUILD_SOURCEVERSION}"
+  local productVersion="${RELEASE_VERSION}"
   local timestamp=$(node -e 'console.log(Date.now())')
 
   if [[ ! -f "artifacts/${ASSET_NAME}" ]]; then
     echo "Downloading artifact '${ASSET_NAME}'"
-    gh release download "${MS_TAG}" --dir "artifacts" --pattern "${ASSET_NAME}*"
+    gh release download "${RELEASE_VERSION}" --dir "artifacts" --pattern "${ASSET_NAME}*"
   fi
 
   local sha1hash=$(cat "artifacts/${ASSET_NAME}.sha1" | awk '{ print $1 }')
@@ -101,42 +105,42 @@ git remote add origin "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${V
 cd ..
 
 if [[ "${OS_NAME}" == "osx" ]]; then
-  ASSET_NAME=VSCodium-darwin-${VSCODE_ARCH}-${MS_TAG}.zip
-  VERSION_PATH="darwin/${VSCODE_ARCH}"
+  ASSET_NAME=VSCodium-darwin-${VSCODE_ARCH}-${RELEASE_VERSION}.zip
+  VERSION_PATH="${VSCODE_QUALITY}/darwin/${VSCODE_ARCH}"
   updateLatestVersion
 elif [[ "${OS_NAME}" == "windows" ]]; then
   # system installer
-  ASSET_NAME=VSCodiumSetup-${VSCODE_ARCH}-${MS_TAG}.exe
-  VERSION_PATH="win32/${VSCODE_ARCH}/system"
+  ASSET_NAME=VSCodiumSetup-${VSCODE_ARCH}-${RELEASE_VERSION}.exe
+  VERSION_PATH="${VSCODE_QUALITY}/win32/${VSCODE_ARCH}/system"
   updateLatestVersion
 
   # user installer
-  ASSET_NAME=VSCodiumUserSetup-${VSCODE_ARCH}-${MS_TAG}.exe
-  VERSION_PATH="win32/${VSCODE_ARCH}/user"
+  ASSET_NAME=VSCodiumUserSetup-${VSCODE_ARCH}-${RELEASE_VERSION}.exe
+  VERSION_PATH="${VSCODE_QUALITY}/win32/${VSCODE_ARCH}/user"
   updateLatestVersion
 
   # windows archive
-  ASSET_NAME=VSCodium-win32-${VSCODE_ARCH}-${MS_TAG}.zip
-  VERSION_PATH="win32/${VSCODE_ARCH}/archive"
+  ASSET_NAME=VSCodium-win32-${VSCODE_ARCH}-${RELEASE_VERSION}.zip
+  VERSION_PATH="${VSCODE_QUALITY}/win32/${VSCODE_ARCH}/archive"
   updateLatestVersion
 
   if [[ "${VSCODE_ARCH}" == "ia32" || "${VSCODE_ARCH}" == "x64" ]]; then
     # msi
-    ASSET_NAME=VSCodium-${VSCODE_ARCH}-${MS_TAG}.msi
-    VERSION_PATH="win32/${VSCODE_ARCH}/msi"
+    ASSET_NAME=VSCodium-${VSCODE_ARCH}-${RELEASE_VERSION}.msi
+    VERSION_PATH="${VSCODE_QUALITY}/win32/${VSCODE_ARCH}/msi"
     updateLatestVersion
 
     # updates-disabled msi
-    ASSET_NAME=VSCodium-${VSCODE_ARCH}-updates-disabled-${MS_TAG}.msi
-    VERSION_PATH="win32/${VSCODE_ARCH}/msi-updates-disabled"
+    ASSET_NAME=VSCodium-${VSCODE_ARCH}-updates-disabled-${RELEASE_VERSION}.msi
+    VERSION_PATH="${VSCODE_QUALITY}/win32/${VSCODE_ARCH}/msi-updates-disabled"
     updateLatestVersion
   fi
 else # linux
   # update service links to tar.gz file
   # see https://update.code.visualstudio.com/api/update/linux-x64/stable/VERSION
   # as examples
-  ASSET_NAME=VSCodium-linux-${VSCODE_ARCH}-${MS_TAG}.tar.gz
-  VERSION_PATH="linux/${VSCODE_ARCH}"
+  ASSET_NAME=VSCodium-linux-${VSCODE_ARCH}-${RELEASE_VERSION}.tar.gz
+  VERSION_PATH="${VSCODE_QUALITY}/linux/${VSCODE_ARCH}"
   updateLatestVersion
 fi
 
