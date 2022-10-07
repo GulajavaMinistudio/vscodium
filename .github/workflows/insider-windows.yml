@@ -7,7 +7,7 @@ on:
         type: string
         description: Forced release version
   schedule:
-    - cron: '0 7 * * *'
+    - cron: '0 8 * * *'
   push:
     branches: [ insider ]
     paths-ignore:
@@ -18,15 +18,18 @@ on:
     - '**/*.md'
 
 jobs:
-  windows:
+  build:
     runs-on: windows-2019
     defaults:
       run:
         shell: bash
     env:
-      OS_NAME: 'windows'
+      APP_NAME: VSCodium
+      ASSETS_REPOSITORY: ${{ github.repository }}-insiders
+      VERSIONS_REPOSITORY: ${{ github.repository_owner }}/versions
+      OS_NAME: windows
       VSCODE_ARCH: ${{ matrix.vscode_arch }}
-      VSCODE_QUALITY: 'insider'
+      VSCODE_QUALITY: insider
     strategy:
       fail-fast: false
       matrix:
@@ -34,6 +37,9 @@ jobs:
           - x64
           - ia32
           - arm64
+    outputs:
+      RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+      SHOULD_DEPLOY: ${{ env.SHOULD_DEPLOY }}
 
     steps:
       - uses: actions/checkout@v3
@@ -93,19 +99,52 @@ jobs:
         run: ./build.sh
         if: env.SHOULD_BUILD == 'yes'
 
-      - name: Prepare artifacts
-        run: ./prepare_artifacts.sh
+      - name: Prepare assets
+        run: ./prepare_assets.sh
         if: env.SHOULD_BUILD == 'yes' && env.SHOULD_DEPLOY == 'yes'
 
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.STRONGER_GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.repository_owner }}
         run: ./release.sh
         if: env.SHOULD_BUILD == 'yes' && env.SHOULD_DEPLOY == 'yes'
 
       - name: Update versions repo
-        if: env.SHOULD_BUILD == 'yes' && env.SHOULD_DEPLOY == 'yes'
-        run: ./update_version.sh
         env:
           GITHUB_TOKEN: ${{ secrets.STRONGER_GITHUB_TOKEN }}
           GITHUB_USERNAME: ${{ github.repository_owner }}
+        run: ./update_version.sh
+        if: env.SHOULD_BUILD == 'yes' && env.SHOULD_DEPLOY == 'yes'
+
+  winget:
+    needs: build
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      APP_IDENTIFIER: VSCodium.VSCodium.Insiders
+      VSCODE_QUALITY: 'insider'
+    if: needs.build.outputs.SHOULD_DEPLOY == 'yes'
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: insider
+
+      - name: Check version
+        run: ./stores/winget/check_version.sh
+        env:
+          RELEASE_VERSION: ${{ needs.build.outputs.RELEASE_VERSION }}
+
+      - name: Release to WinGet
+        uses: vedantmgoyal2009/winget-releaser@latest
+        with:
+          identifier: ${{ env.APP_IDENTIFIER }}
+          version: ${{ env.RELEASE_VERSION }}
+          release-repository: vscodium-insiders
+          release-tag: ${{ env.RELEASE_VERSION }}-insider
+          installers-regex: '\.exe$' # only .exe files
+          token: ${{ secrets.STRONGER_GITHUB_TOKEN }}
+        if: env.SHOULD_DEPLOY == 'yes'

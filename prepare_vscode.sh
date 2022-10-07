@@ -100,7 +100,10 @@ setpath "product" "reportIssueUrl" "https://github.com/VSCodium/vscodium/issues/
 setpath "product" "requestFeatureUrl" "https://go.microsoft.com/fwlink/?LinkID=533482"
 setpath "product" "tipsAndTricksUrl" "https://go.microsoft.com/fwlink/?linkid=852118"
 setpath "product" "twitterUrl" "https://go.microsoft.com/fwlink/?LinkID=533687"
-setpath "product" "updateUrl" "https://vscodium.now.sh"
+
+if [[ "${DISABLE_UPDATE}" != "yes" ]]; then
+  setpath "product" "updateUrl" "https://vscodium.now.sh"
+fi
 
 if [[ "${VSCODE_QUALITY}" == "insider" ]]; then
   setpath "product" "nameShort" "VSCodium - Insiders"
@@ -160,6 +163,9 @@ setpath "package" "version" $( echo "${RELEASE_VERSION}" | sed -n -E "s/^(.*)\.(
 setpath "package" "release" $( echo "${RELEASE_VERSION}" | sed -n -E "s/^(.*)\.([0-9]+)(-insider)?$/\2/p" )
 
 replace 's|Microsoft Corporation|VSCodium|' package.json
+
+# announcements
+replace "s|\\[\\/\\* BUILTIN_ANNOUNCEMENTS \\*\\/\\]|$( cat ../announcements-builtin.json | tr -d '\n' )|" src/vs/workbench/contrib/welcomeGettingStarted/browser/gettingStarted.ts
 
 ../undo_telemetry.sh
 

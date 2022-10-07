@@ -4,13 +4,15 @@
 # to run with Bash: "C:\Program Files\Git\bin\bash.exe" ./build/build.sh
 ###
 
+export APP_NAME="VSCodium"
 export CI_BUILD="no"
 export SHOULD_BUILD="yes"
-export SKIP_PACKAGES="yes"
+export SKIP_BUILD="no"
+export SKIP_ASSETS="yes"
 export VSCODE_LATEST="no"
 export VSCODE_QUALITY="stable"
 
-while getopts ":ilp" opt; do
+while getopts ":ilop" opt; do
   case "$opt" in
     i)
       export VSCODE_QUALITY="insider"
@@ -18,8 +20,11 @@ while getopts ":ilp" opt; do
     l)
       export VSCODE_LATEST="yes"
       ;;
+    o)
+      export SKIP_BUILD="yes"
+      ;;
     p)
-      export SKIP_PACKAGES="no"
+      export SKIP_ASSETS="no"
       ;;
   esac
 done
@@ -45,20 +50,41 @@ else
 fi
 
 echo "OS_NAME=\"${OS_NAME}\""
-echo "SKIP_PACKAGES=\"${SKIP_PACKAGES}\""
+echo "SKIP_BUILD=\"${SKIP_BUILD}\""
+echo "SKIP_ASSETS=\"${SKIP_ASSETS}\""
 echo "VSCODE_ARCH=\"${VSCODE_ARCH}\""
 echo "VSCODE_LATEST=\"${VSCODE_LATEST}\""
 echo "VSCODE_QUALITY=\"${VSCODE_QUALITY}\""
 
-rm -rf vscode* VSCode*
+if [[ "${SKIP_BUILD}" == "no" ]]; then
+  rm -rf vscode* VSCode*
 
-. get_repo.sh
-. build.sh
+  . get_repo.sh
 
-if [[ "${SKIP_PACKAGES}" == "no" ]]; then
+  # save variables for later
+  echo "MS_TAG=\"${MS_TAG}\"" > build.env
+  echo "MS_COMMIT=\"${MS_COMMIT}\"" >> build.env
+  echo "RELEASE_VERSION=\"${RELEASE_VERSION}\"" >> build.env
+  echo "BUILD_SOURCEVERSION=\"${BUILD_SOURCEVERSION}\"" >> build.env
+
+  . build.sh
+
+  if [[ "${VSCODE_QUALITY}" == "insider" && "${VSCODE_LATEST}" == "yes" ]]; then
+    echo "$( cat "insider.json" | jq --arg 'tag' "${MS_TAG/\-insider/}" --arg 'commit' "${MS_COMMIT}" '. | .tag=$tag | .commit=$commit' )" > "insider.json"
+  fi
+else
+  . build.env
+
+  echo "MS_TAG=\"${MS_TAG}\""
+  echo "MS_COMMIT=\"${MS_COMMIT}\""
+  echo "RELEASE_VERSION=\"${RELEASE_VERSION}\""
+  echo "BUILD_SOURCEVERSION=\"${BUILD_SOURCEVERSION}\""
+fi
+
+if [[ "${SKIP_ASSETS}" == "no" ]]; then
   if [[ "${OS_NAME}" == "windows" ]]; then
     rm -rf build/windows/msi/releasedir
   fi
 
-  . prepare_artifacts.sh
+  . prepare_assets.sh
 fi
