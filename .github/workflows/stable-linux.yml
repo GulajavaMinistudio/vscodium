@@ -6,6 +6,9 @@ on:
       new_release:
         type: boolean
         description: Force new Release
+      force_version:
+        type: boolean
+        description: Force update version
   schedule:
     - cron: '0 18 * * *'
   push:
@@ -102,7 +105,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: remote-dependencies-${{ matrix.vscode_arch }}
-          path: ./vscode/remote/node_modules
+          path: ./remote-dependencies.tar
           retention-days: ${{ needs.check.outputs.SHOULD_DEPLOY == 'yes' && 30 || 1 }}
 
   build:
@@ -167,7 +170,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: remote-dependencies-${{ matrix.vscode_arch }}
-          path: ./vscode/remote/node_modules
         if: env.SHOULD_BUILD == 'yes' && matrix.vscode_arch == 'x64'
 
       - name: Build
@@ -189,10 +191,11 @@ jobs:
 
       - name: Update versions repo
         env:
+          FORCE_UPDATE: ${{ github.event.inputs.force_version }}
           GITHUB_TOKEN: ${{ secrets.STRONGER_GITHUB_TOKEN }}
           GITHUB_USERNAME: ${{ github.repository_owner }}
         run: ./update_version.sh
-        if: env.SHOULD_BUILD == 'yes' && env.SHOULD_DEPLOY == 'yes'
+        if: env.SHOULD_DEPLOY == 'yes'
 
   aur:
     needs:
@@ -241,7 +244,7 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
         run: ./stores/snapcraft/check_version.sh
 
-      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-qemu-action@v2
         if: env.SHOULD_DEPLOY == 'yes'
 
       - uses: diddlesnaps/snapcraft-multiarch-action@v1

@@ -2,13 +2,22 @@
 
 set -e
 
-if [[ "${SHOULD_BUILD}" != "yes" ]]; then
+if [[ "${SHOULD_BUILD}" != "yes" && "${FORCE_UPDATE}" != "true" ]]; then
   echo "Will not update version JSON because we did not build"
   exit
 fi
 
 if [[ -z "${GITHUB_TOKEN}" ]]; then
   echo "Will not update version JSON because no GITHUB_TOKEN defined"
+  exit
+fi
+
+if [[ "${FORCE_UPDATE}" == "true" ]]; then
+  . version.sh
+fi
+
+if [[ -z "${BUILD_SOURCEVERSION}" ]]; then
+  echo "Will not update version JSON because no BUILD_SOURCEVERSION defined"
   exit
 fi
 
@@ -75,11 +84,11 @@ generateJson() {
 updateLatestVersion() {
   echo "Generating ${VERSION_PATH}/latest.json"
 
-  # do not update the same version since BUILD_SOURCEVERSION might be different
+  # do not update the same version
   if [[ -f "versions/${VERSION_PATH}/latest.json" ]]; then
     CURRENT_VERSION=$( jq -r '.name' "versions/${VERSION_PATH}/latest.json" )
 
-    if [[ "${CURRENT_VERSION}" == "${RELEASE_VERSION}" ]]; then
+    if [[ "${CURRENT_VERSION}" == "${RELEASE_VERSION}" && "${FORCE_UPDATE}" != "true" ]]; then
       return
     fi
   fi

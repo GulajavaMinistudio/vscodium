@@ -6,6 +6,9 @@ on:
       new_release:
         type: boolean
         description: Force new Release
+      force_version:
+        type: boolean
+        description: Force update version
   schedule:
     - cron: '0 18 * * *'
   push:
@@ -56,7 +59,7 @@ jobs:
         run: npm install -g yarn
 
       - name: Setup Python 3
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
@@ -93,10 +96,11 @@ jobs:
 
       - name: Update versions repo
         env:
+          FORCE_UPDATE: ${{ github.event.inputs.force_version }}
           GITHUB_TOKEN: ${{ secrets.STRONGER_GITHUB_TOKEN }}
           GITHUB_USERNAME: ${{ github.repository_owner }}
         run: ./update_version.sh
-        if: env.SHOULD_BUILD == 'yes' && env.SHOULD_DEPLOY == 'yes'
+        if: env.SHOULD_DEPLOY == 'yes'
 
   winget:
     needs: build
@@ -117,7 +121,7 @@ jobs:
           RELEASE_VERSION: ${{ needs.build.outputs.RELEASE_VERSION }}
 
       - name: Release to WinGet
-        uses: vedantmgoyal2009/winget-releaser@v1
+        uses: vedantmgoyal2009/winget-releaser@v2
         with:
           identifier: ${{ env.APP_IDENTIFIER }}
           version: ${{ env.RELEASE_VERSION }}
