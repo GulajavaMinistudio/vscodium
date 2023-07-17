@@ -48,8 +48,7 @@
   ],
   "extensionEnabledApiProposals": {
     "ms-vscode.vscode-selfhost-test-provider": [
-      "testObserver",
-      "testContinuousRun"
+      "testObserver"
     ],
     "VisualStudioExptTeam.vscodeintellicode-completions": [
       "inlineCompletionsAdditions"
@@ -57,6 +56,7 @@
     "ms-vsliveshare.vsliveshare": [
       "contribMenuBarHome",
       "contribShareMenu",
+      "contribStatusBarItems",
       "diffCommand",
       "documentFiltersExclusive",
       "fileSearchProvider",
@@ -79,12 +79,14 @@
     "ms-python.python": [
       "contribEditorContentMenu",
       "quickPickSortByLabel",
+      "portsAttributes",
       "testObserver",
       "envShellEvent",
       "quickPickItemTooltip",
       "terminalDataWriteEvent",
       "envCollectionWorkspace",
-      "saveEditor"
+      "saveEditor",
+      "envCollectionOptions"
     ],
     "ms-dotnettools.dotnet-interactive-vscode": [
       "notebookMessaging"
@@ -106,6 +108,7 @@
       "textSearchProvider"
     ],
     "ms-vscode.remote-repositories": [
+      "canonicalUriProvider",
       "contribEditSessions",
       "contribRemoteHelp",
       "contribMenuBarHome",
@@ -118,6 +121,7 @@
       "fileSearchProvider",
       "quickPickSortByLabel",
       "workspaceTrust",
+      "shareProvider",
       "scmActionButton",
       "scmSelectedProvider",
       "scmValidation",
@@ -170,17 +174,26 @@
       "contribShareMenu",
       "fileComments",
       "contribCommentPeekContext",
-      "treeItemCheckbox",
       "codiconDecoration",
       "diffCommand",
       "contribCommentEditorActionsMenu",
-      "quickDiffProvider"
+      "readonlyMessage",
+      "shareProvider",
+      "quickDiffProvider",
+      "quickPickItemIcon"
     ],
     "GitHub.copilot": [
       "inlineCompletionsAdditions"
     ],
     "GitHub.copilot-nightly": [
       "inlineCompletionsAdditions"
+    ],
+    "GitHub.copilot-chat": [
+      "handleIssueUri",
+      "interactive",
+      "interactiveUserActions",
+      "semanticSimilarity",
+      "terminalDataWriteEvent"
     ],
     "GitHub.remotehub": [
       "contribRemoteHelp",
@@ -229,6 +242,9 @@
     "ms-azuretools.vscode-azureappservice": [
       "terminalDataWriteEvent"
     ],
+    "ms-azuretools.vscode-azureresourcegroups": [
+      "authGetSessions"
+    ],
     "ms-vscode.anycode": [
       "extensionsAny"
     ],
@@ -239,6 +255,9 @@
       "documentPaste"
     ],
     "ms-dotnettools.csdevkit": [
+      "inlineCompletionsAdditions"
+    ],
+    "ms-dotnettools.vscodeintellicode-csharp": [
       "inlineCompletionsAdditions"
     ],
     "jeanp413.open-remote-ssh": [

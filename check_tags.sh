@@ -282,6 +282,24 @@ if [ "${ASSETS}" != "null" ]; then
         echo "Already have all the Linux arm builds"
       fi
 
+    # linux-ppc64le
+    elif [[ "${VSCODE_ARCH}" == "ppc64le" ]]; then
+      SHOULD_BUILD_DEB="no"
+      SHOULD_BUILD_APPIMAGE="no"
+      SHOULD_BUILD_RPM="no"
+      SHOULD_BUILD_TAR="no"
+
+      if [[ -z $( contains "${APP_NAME_LC}-reh-linux-ppc64le-${RELEASE_VERSION}.tar.gz" ) ]]; then
+        echo "Building on Linux PowerPC64LE because we have no REH archive"
+        export SHOULD_BUILD="yes"
+      else
+        export SHOULD_BUILD_REH="no"
+      fi
+
+      if [[ "${SHOULD_BUILD}" != "yes" ]]; then
+        echo "Already have all the Linux PowerPC64LE builds"
+      fi
+
     # linux-x64
     else
       if [[ -z $( contains "amd64.deb" ) ]]; then
@@ -326,7 +344,12 @@ if [ "${ASSETS}" != "null" ]; then
   fi
 else
   if [[ "${OS_NAME}" == "linux" ]]; then
-    if [[ "${VSCODE_ARCH}" != "x64" ]]; then
+    if [[ "${VSCODE_ARCH}" == "ppc64le" ]]; then
+      SHOULD_BUILD_DEB="no"
+      SHOULD_BUILD_APPIMAGE="no"
+      SHOULD_BUILD_RPM="no"
+      SHOULD_BUILD_TAR="no"
+    elif [[ "${VSCODE_ARCH}" != "x64" ]]; then
       export SHOULD_BUILD_APPIMAGE="no"
     fi
   elif [[ "${OS_NAME}" == "osx" ]]; then
