@@ -1,8 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# shellcheck disable=SC1091
 
 set -e
 
-APP_NAME_LC=$( echo "${APP_NAME}" | awk '{print tolower($0)}' )
+APP_NAME_LC="$( echo "${APP_NAME}" | awk '{print tolower($0)}' )"
 
 npm install -g checksum
 
@@ -29,7 +30,7 @@ if [[ "${OS_NAME}" == "osx" ]]; then
     security create-keychain -p mysecretpassword "${KEYCHAIN}"
     security set-keychain-settings -lut 21600 "${KEYCHAIN}"
     security unlock-keychain -p mysecretpassword "${KEYCHAIN}"
-    security list-keychains -s `security list-keychains | xargs` "${KEYCHAIN}"
+    security list-keychains -s "$(security list-keychains | xargs)" "${KEYCHAIN}"
     # security list-keychains -d user
     # security show-keychain-info ${KEYCHAIN}
 
@@ -75,7 +76,7 @@ elif [[ "${OS_NAME}" == "windows" ]]; then
   yarn gulp "vscode-win32-${VSCODE_ARCH}-inno-updater"
 
   if [[ "${SHOULD_BUILD_ZIP}" != "no" ]]; then
-    yarn gulp "vscode-win32-${VSCODE_ARCH}-archive"
+    7z.exe a -tzip "../assets/${APP_NAME}-win32-${VSCODE_ARCH}-${RELEASE_VERSION}.zip" -x!CodeSignSummary*.md -x!tools "../VSCode-win32-${VSCODE_ARCH}/*" -r
   fi
 
   if [[ "${SHOULD_BUILD_EXE_SYS}" != "no" ]]; then
@@ -97,11 +98,6 @@ elif [[ "${OS_NAME}" == "windows" ]]; then
   fi
 
   cd ..
-
-  if [[ "${SHOULD_BUILD_ZIP}" != "no" ]]; then
-    echo "Moving ZIP"
-    mv "vscode\\.build\\win32-${VSCODE_ARCH}\\archive\\VSCode-win32-${VSCODE_ARCH}.zip" "assets\\${APP_NAME}-win32-${VSCODE_ARCH}-${RELEASE_VERSION}.zip"
-  fi
 
   if [[ "${SHOULD_BUILD_EXE_SYS}" != "no" ]]; then
     echo "Moving System EXE"
@@ -137,9 +133,9 @@ else
     yarn gulp "vscode-linux-${VSCODE_ARCH}-build-rpm"
   fi
 
-  if [[ "${SHOULD_BUILD_APPIMAGE}" != "no" ]]; then
-    . ../build/linux/appimage/build.sh
-  fi
+  # if [[ "${SHOULD_BUILD_APPIMAGE}" != "no" ]]; then
+  #   . ../build/linux/appimage/build.sh
+  # fi
 
   cd ..
 
@@ -160,12 +156,12 @@ else
     mv vscode/.build/linux/rpm/*/*.rpm assets/
   fi
 
-  if [[ "${SHOULD_BUILD_APPIMAGE}" != "no" ]]; then
-    echo "Moving AppImage"
-    mv build/linux/appimage/out/*.AppImage* assets/
+  # if [[ "${SHOULD_BUILD_APPIMAGE}" != "no" ]]; then
+  #   echo "Moving AppImage"
+  #   mv build/linux/appimage/out/*.AppImage* assets/
 
-    find assets -name '*.AppImage*' -exec bash -c 'mv $0 ${0/_-_/-}' {} \;
-  fi
+  #   find assets -name '*.AppImage*' -exec bash -c 'mv $0 ${0/_-_/-}' {} \;
+  # fi
 
   VSCODE_PLATFORM="linux"
 fi
@@ -179,8 +175,7 @@ fi
 
 cd assets
 
-for FILE in *
-do
+for FILE in *; do
   if [[ -f "${FILE}" ]]; then
     sum_file "${FILE}"
   fi

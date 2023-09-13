@@ -1,17 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# shellcheck disable=SC1091
 
 set -ex
 
-if [ -f  "./remote-dependencies.tar" ]; then
+if [[ -f  "./remote-dependencies.tar" ]]; then
   tar -xf ./remote-dependencies.tar ./vscode/remote/node_modules
 fi
 
 . version.sh
 
 if [[ "${SHOULD_BUILD}" == "yes" ]]; then
-  npm config set scripts-prepend-node-path true
-  npm config set node_gyp
-
   echo "MS_COMMIT=\"${MS_COMMIT}\""
 
   . prepare_vscode.sh
@@ -29,7 +27,7 @@ if [[ "${SHOULD_BUILD}" == "yes" ]]; then
   if [[ "${OS_NAME}" == "osx" ]]; then
     yarn gulp "vscode-darwin-${VSCODE_ARCH}-min-ci"
 
-    find "../VSCode-darwin-${VSCODE_ARCH}" -exec touch {} \;
+    find "../VSCode-darwin-${VSCODE_ARCH}" -print0 | xargs -0 touch -c
 
     VSCODE_PLATFORM="darwin"
   elif [[ "${OS_NAME}" == "windows" ]]; then
@@ -47,7 +45,7 @@ if [[ "${SHOULD_BUILD}" == "yes" ]]; then
   else # linux
     yarn gulp "vscode-linux-${VSCODE_ARCH}-min-ci"
 
-    find "../VSCode-linux-${VSCODE_ARCH}" -exec touch {} \;
+    find "../VSCode-linux-${VSCODE_ARCH}" -print0 | xargs -0 touch -c
 
     VSCODE_PLATFORM="linux"
   fi

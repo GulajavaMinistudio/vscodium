@@ -48,7 +48,8 @@
   ],
   "extensionEnabledApiProposals": {
     "ms-vscode.vscode-selfhost-test-provider": [
-      "testObserver"
+      "testObserver",
+      "testMessageContextValue"
     ],
     "VisualStudioExptTeam.vscodeintellicode-completions": [
       "inlineCompletionsAdditions"
@@ -84,12 +85,11 @@
       "envShellEvent",
       "quickPickItemTooltip",
       "terminalDataWriteEvent",
-      "envCollectionWorkspace",
-      "saveEditor",
-      "envCollectionOptions"
+      "saveEditor"
     ],
     "ms-dotnettools.dotnet-interactive-vscode": [
-      "notebookMessaging"
+      "notebookMessaging",
+      "languageConfigurationAutoClosingPairs"
     ],
     "GitHub.codespaces": [
       "contribEditSessions",
@@ -143,7 +143,9 @@
       "telemetry"
     ],
     "ms-vscode.remote-server": [
-      "resolvers"
+      "resolvers",
+      "tunnels",
+      "contribViewsWelcome"
     ],
     "ms-vscode.remote-explorer": [
       "contribRemoteHelp",
@@ -178,9 +180,9 @@
       "diffCommand",
       "contribCommentEditorActionsMenu",
       "readonlyMessage",
+      "treeViewMarkdownMessage",
       "shareProvider",
-      "quickDiffProvider",
-      "quickPickItemIcon"
+      "quickDiffProvider"
     ],
     "GitHub.copilot": [
       "inlineCompletionsAdditions"
@@ -192,8 +194,14 @@
       "handleIssueUri",
       "interactive",
       "interactiveUserActions",
-      "semanticSimilarity",
-      "terminalDataWriteEvent"
+      "terminalContextMenu",
+      "terminalDataWriteEvent",
+      "terminalSelection",
+      "terminalQuickFixProvider",
+      "chatSlashCommands",
+      "readonlyMessage",
+      "mappedEditsProvider",
+      "aiRelatedInformation"
     ],
     "GitHub.remotehub": [
       "contribRemoteHelp",
@@ -260,10 +268,23 @@
     "ms-dotnettools.vscodeintellicode-csharp": [
       "inlineCompletionsAdditions"
     ],
+    "microsoft-IsvExpTools.powerplatform-vscode": [
+      "fileSearchProvider",
+      "textSearchProvider"
+    ],
+    "microsoft-IsvExpTools.powerplatform-vscode-preview": [
+      "fileSearchProvider",
+      "textSearchProvider"
+    ],
     "jeanp413.open-remote-ssh": [
       "resolvers",
       "tunnels",
       "terminalDataWriteEvent",
+      "contribRemoteHelp",
+      "contribViewsRemote"
+    ],
+    "jeanp413.open-remote-wsl": [
+      "resolvers",
       "contribRemoteHelp",
       "contribViewsRemote"
     ]
