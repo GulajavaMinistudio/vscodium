@@ -24,6 +24,7 @@ cd vscode || { echo "'vscode' dir not found"; exit 1; }
 for file in ../patches/*.patch; do
   if [[ -f "${file}" ]]; then
     echo applying patch: "${file}";
+    # grep '^+++' "${file}"  | sed -e 's#+++ [ab]/#./vscode/#' | while read line; do shasum -a 256 "${line}"; done
     if ! git apply --ignore-whitespace "${file}"; then
       echo failed to apply patch "${file}" >&2
       exit 1
@@ -63,7 +64,7 @@ if [[ "${OS_NAME}" == "linux" ]]; then
 fi
 
 if [[ "${OS_NAME}" == "osx" ]]; then
-  CHILD_CONCURRENCY=1 yarn --network-timeout 180000
+  CHILD_CONCURRENCY=1 yarn --frozen-lockfile --network-timeout 180000
 
   yarn postinstall
 else
@@ -81,7 +82,7 @@ else
     git am --3way --whitespace=fix ../../build/npm/gyp/patches/gyp_spectre_mitigation_support.patch
     npm install
 
-    npm_config_node_gyp=$( pwd )
+    npm_config_node_gyp="$( pwd )/bin/node-gyp.js"
     export npm_config_node_gyp
 
     cd ../..
@@ -91,7 +92,7 @@ else
     export npm_config_arm_version=7
   fi
 
-  CHILD_CONCURRENCY=1 yarn --check-files --network-timeout 180000
+  CHILD_CONCURRENCY=1 yarn --frozen-lockfile --check-files --network-timeout 180000
 fi
 
 setpath() {
