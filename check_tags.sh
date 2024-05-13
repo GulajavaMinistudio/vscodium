@@ -9,36 +9,49 @@ if [[ -z "${GITHUB_TOKEN}" ]]; then
 fi
 
 APP_NAME_LC="$( echo "${APP_NAME}" | awk '{print tolower($0)}' )"
-GITHUB_RESPONSE=$( curl -s -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/${ASSETS_REPOSITORY}/releases/latest" )
-LATEST_VERSION=$( echo "${GITHUB_RESPONSE}" | jq -c -r '.tag_name' )
 
-if [[ "${LATEST_VERSION}" =~ ^([0-9]+\.[0-9]+\.[0-9]+) ]]; then
-  if [[ "${MS_TAG}" != "${BASH_REMATCH[1]}" ]]; then
-    echo "New VSCode version, new build"
-    export SHOULD_BUILD="yes"
-  elif [[ "${NEW_RELEASE}" == "true" ]]; then
-    echo "New release build"
-    export SHOULD_BUILD="yes"
-  elif [[ "${VSCODE_QUALITY}" == "insider" ]]; then
-    BODY=$( echo "${GITHUB_RESPONSE}" | jq -c -r '.body' )
+if [[ "${SHOULD_DEPLOY}" == "no" ]]; then
+  ASSETS="null"
+else
+  GITHUB_RESPONSE=$( curl -s -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/${ASSETS_REPOSITORY}/releases/latest" )
+  LATEST_VERSION=$( echo "${GITHUB_RESPONSE}" | jq -c -r '.tag_name' )
+  RECHECK_ASSETS="${SHOULD_BUILD}"
 
-    if [[ "${BODY}" =~ \[([a-z0-9]+)\] ]]; then
-      if [[ "${MS_COMMIT}" != "${BASH_REMATCH[1]}" ]]; then
-        echo "New VSCode Insiders version, new build"
-        export SHOULD_BUILD="yes"
+  if [[ "${LATEST_VERSION}" =~ ^([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+    if [[ "${MS_TAG}" != "${BASH_REMATCH[1]}" ]]; then
+      echo "New VSCode version, new build"
+      export SHOULD_BUILD="yes"
+    elif [[ "${NEW_RELEASE}" == "true" ]]; then
+      echo "New release build"
+      export SHOULD_BUILD="yes"
+    elif [[ "${VSCODE_QUALITY}" == "insider" ]]; then
+      BODY=$( echo "${GITHUB_RESPONSE}" | jq -c -r '.body' )
+
+      if [[ "${BODY}" =~ \[([a-z0-9]+)\] ]]; then
+        if [[ "${MS_COMMIT}" != "${BASH_REMATCH[1]}" ]]; then
+          echo "New VSCode Insiders version, new build"
+          export SHOULD_BUILD="yes"
+        fi
       fi
     fi
-  fi
 
-  if [[ "${SHOULD_BUILD}" != "yes" ]]; then
-    export RELEASE_VERSION="${LATEST_VERSION}"
-    echo "RELEASE_VERSION=${RELEASE_VERSION}" >> "${GITHUB_ENV}"
+    if [[ "${SHOULD_BUILD}" != "yes" ]]; then
+      export RELEASE_VERSION="${LATEST_VERSION}"
+      echo "RELEASE_VERSION=${RELEASE_VERSION}" >> "${GITHUB_ENV}"
 
-    echo "Switch to release version: ${RELEASE_VERSION}"
+      echo "Switch to release version: ${RELEASE_VERSION}"
 
-    ASSETS=$( echo "${GITHUB_RESPONSE}" | jq -c '.assets | map(.name)?' )
+      ASSETS=$( echo "${GITHUB_RESPONSE}" | jq -c '.assets | map(.name)?' )
+    elif [[ "${RECHECK_ASSETS}" == "yes" ]]; then
+      export SHOULD_BUILD="no"
+
+      ASSETS=$( echo "${GITHUB_RESPONSE}" | jq -c '.assets | map(.name)?' )
+    else
+      ASSETS="null"
+    fi
   else
-    ASSETS="null"
+    echo "can't check assets"
+    exit 1
   fi
 fi
 
@@ -47,7 +60,10 @@ contains() {
   echo "${ASSETS}" | grep "${1}\""
 }
 
-if [[ "${ASSETS}" != "null" ]]; then
+# shellcheck disable=SC2153
+if [[ "${CHECK_ASSETS}" == "no" ]]; then
+  echo "Don't check assets, yet"
+elif [[ "${ASSETS}" != "null" ]]; then
   if [[ "${IS_SPEARHEAD}" == "yes" ]]; then
     if [[ -z $( contains "${APP_NAME}-${RELEASE_VERSION}-src.tar.gz" ) || -z $( contains "${APP_NAME}-${RELEASE_VERSION}-src.zip" ) ]]; then
       echo "Building because we have no SRC"
@@ -209,136 +225,168 @@ if [[ "${ASSETS}" != "null" ]]; then
     fi
   elif [[ "${OS_NAME}" == "linux" ]]; then
 
-    # linux-arm64
-    if [[ "${VSCODE_ARCH}" == "arm64" ]]; then
-      if [[ -z $( contains "arm64.deb" ) ]]; then
-        echo "Building on Linux arm64 because we have no DEB"
+    if [[ "${CHECK_ONLY_REH}" == "yes" ]]; then
+      if [[ -z $( contains "${APP_NAME_LC}-reh-linux-${VSCODE_ARCH}-${RELEASE_VERSION}.tar.gz" ) ]]; then
+        echo "Building on Linux ${VSCODE_ARCH} because we have no REH archive"
         export SHOULD_BUILD="yes"
       else
-        export SHOULD_BUILD_DEB="no"
-      fi
-
-      if [[ -z $( contains "aarch64.rpm" ) ]]; then
-        echo "Building on Linux arm64 because we have no RPM"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_RPM="no"
-      fi
-
-      if [[ -z $( contains "${APP_NAME}-linux-arm64-${RELEASE_VERSION}.tar.gz" ) ]]; then
-        echo "Building on Linux arm64 because we have no TAR"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_TAR="no"
-      fi
-
-      if [[ -z $( contains "${APP_NAME_LC}-reh-linux-arm64-${RELEASE_VERSION}.tar.gz" ) ]]; then
-        echo "Building on Linux arm64 because we have no REH archive"
-        export SHOULD_BUILD="yes"
-      else
+        echo "Already have the Linux REH ${VSCODE_ARCH} archive"
         export SHOULD_BUILD_REH="no"
       fi
-
-      export SHOULD_BUILD_APPIMAGE="no"
-
-      if [[ "${SHOULD_BUILD}" != "yes" ]]; then
-        echo "Already have all the Linux arm64 builds"
-      fi
-
-    # linux-armhf
-    elif [[ "${VSCODE_ARCH}" == "armhf" ]]; then
-      if [[ -z $( contains "armhf.deb" ) ]]; then
-        echo "Building on Linux arm because we have no DEB"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_DEB="no"
-      fi
-
-      if [[ -z $( contains "armv7hl.rpm" ) ]]; then
-        echo "Building on Linux arm because we have no RPM"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_RPM="no"
-      fi
-
-      if [[ -z $( contains "${APP_NAME}-linux-armhf-${RELEASE_VERSION}.tar.gz" ) ]]; then
-        echo "Building on Linux arm because we have no TAR"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_TAR="no"
-      fi
-
-      if [[ -z $( contains "${APP_NAME_LC}-reh-linux-armhf-${RELEASE_VERSION}.tar.gz" ) ]]; then
-        echo "Building on Linux arm because we have no REH archive"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_REH="no"
-      fi
-
-      export SHOULD_BUILD_APPIMAGE="no"
-
-      if [[ "${SHOULD_BUILD}" != "yes" ]]; then
-        echo "Already have all the Linux arm builds"
-      fi
-
-    # linux-ppc64le
-    elif [[ "${VSCODE_ARCH}" == "ppc64le" ]]; then
-      SHOULD_BUILD_DEB="no"
-      SHOULD_BUILD_APPIMAGE="no"
-      SHOULD_BUILD_RPM="no"
-      SHOULD_BUILD_TAR="no"
-
-      if [[ -z $( contains "${APP_NAME_LC}-reh-linux-ppc64le-${RELEASE_VERSION}.tar.gz" ) ]]; then
-        echo "Building on Linux PowerPC64LE because we have no REH archive"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_REH="no"
-      fi
-
-      if [[ "${SHOULD_BUILD}" != "yes" ]]; then
-        echo "Already have all the Linux PowerPC64LE builds"
-      fi
-
-    # linux-x64
     else
-      if [[ -z $( contains "amd64.deb" ) ]]; then
-        echo "Building on Linux x64 because we have no DEB"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_DEB="no"
+
+      # linux-arm64
+      if [[ "${VSCODE_ARCH}" == "arm64" || "${CHECK_ALL}" == "yes" ]]; then
+        if [[ -z $( contains "arm64.deb" ) ]]; then
+          echo "Building on Linux arm64 because we have no DEB"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_DEB="no"
+        fi
+
+        if [[ -z $( contains "aarch64.rpm" ) ]]; then
+          echo "Building on Linux arm64 because we have no RPM"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_RPM="no"
+        fi
+
+        if [[ -z $( contains "${APP_NAME}-linux-arm64-${RELEASE_VERSION}.tar.gz" ) ]]; then
+          echo "Building on Linux arm64 because we have no TAR"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_TAR="no"
+        fi
+
+        if [[ "${CHECK_REH}" != "no" && -z $( contains "${APP_NAME_LC}-reh-linux-arm64-${RELEASE_VERSION}.tar.gz" ) ]]; then
+          echo "Building on Linux arm64 because we have no REH archive"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_REH="no"
+        fi
+
+        export SHOULD_BUILD_APPIMAGE="no"
+
+        if [[ "${SHOULD_BUILD}" != "yes" ]]; then
+          echo "Already have all the Linux arm64 builds"
+        fi
       fi
 
-      if [[ -z $( contains "x86_64.rpm" ) ]]; then
-        echo "Building on Linux x64 because we have no RPM"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_RPM="no"
+      # linux-armhf
+      if [[ "${VSCODE_ARCH}" == "armhf" || "${CHECK_ALL}" == "yes" ]]; then
+        if [[ -z $( contains "armhf.deb" ) ]]; then
+          echo "Building on Linux arm because we have no DEB"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_DEB="no"
+        fi
+
+        if [[ -z $( contains "armv7hl.rpm" ) ]]; then
+          echo "Building on Linux arm because we have no RPM"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_RPM="no"
+        fi
+
+        if [[ -z $( contains "${APP_NAME}-linux-armhf-${RELEASE_VERSION}.tar.gz" ) ]]; then
+          echo "Building on Linux arm because we have no TAR"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_TAR="no"
+        fi
+
+        if [[ "${CHECK_REH}" != "no" && -z $( contains "${APP_NAME_LC}-reh-linux-armhf-${RELEASE_VERSION}.tar.gz" ) ]]; then
+          echo "Building on Linux arm because we have no REH archive"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_REH="no"
+        fi
+
+        export SHOULD_BUILD_APPIMAGE="no"
+
+        if [[ "${SHOULD_BUILD}" != "yes" ]]; then
+          echo "Already have all the Linux arm builds"
+        fi
       fi
 
-      if [[ -z $( contains "${APP_NAME}-linux-x64-${RELEASE_VERSION}.tar.gz" ) ]]; then
-        echo "Building on Linux x64 because we have no TAR"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_TAR="no"
+      # linux-ppc64le
+      if [[ "${VSCODE_ARCH}" == "ppc64le" || "${CHECK_ALL}" == "yes" ]]; then
+        SHOULD_BUILD_APPIMAGE="no"
+        SHOULD_BUILD_DEB="no"
+        SHOULD_BUILD_RPM="no"
+        SHOULD_BUILD_TAR="no"
+
+        if [[ -z $( contains "${APP_NAME_LC}-reh-linux-ppc64le-${RELEASE_VERSION}.tar.gz" ) ]]; then
+          echo "Building on Linux PowerPC64LE because we have no REH archive"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_REH="no"
+        fi
+
+        if [[ "${SHOULD_BUILD}" != "yes" ]]; then
+          echo "Already have all the Linux PowerPC64LE builds"
+        fi
       fi
 
-      # if [[ -z $( contains "x86_64.AppImage" ) ]]; then
-      #   echo "Building on Linux x64 because we have no AppImage"
-      #   export SHOULD_BUILD="yes"
-      # else
-      #   export SHOULD_BUILD_APPIMAGE="no"
-      # fi
-      export SHOULD_BUILD_APPIMAGE="no"
+      # linux-riscv64
+      if [[ "${VSCODE_ARCH}" == "riscv64" || "${CHECK_ALL}" == "yes" ]]; then
+        SHOULD_BUILD_APPIMAGE="no"
+        SHOULD_BUILD_DEB="no"
+        SHOULD_BUILD_RPM="no"
+        SHOULD_BUILD_TAR="no"
 
-      if [[ -z $( contains "${APP_NAME_LC}-reh-linux-x64-${RELEASE_VERSION}.tar.gz" ) ]]; then
-        echo "Building on Linux x64 because we have no REH archive"
-        export SHOULD_BUILD="yes"
-      else
-        export SHOULD_BUILD_REH="no"
+        if [[ -z $( contains "${APP_NAME_LC}-reh-linux-riscv64-${RELEASE_VERSION}.tar.gz" ) ]]; then
+          echo "Building on Linux RISC-V64 because we have no REH archive"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_REH="no"
+        fi
+
+        if [[ "${SHOULD_BUILD}" != "yes" ]]; then
+          echo "Already have all the Linux PowerPC64LE builds"
+        fi
       fi
 
-      if [[ "${SHOULD_BUILD}" != "yes" ]]; then
-        echo "Already have all the Linux x64 builds"
+      # linux-x64
+      if [[ "${VSCODE_ARCH}" == "x64" || "${CHECK_ALL}" == "yes" ]]; then
+        if [[ -z $( contains "amd64.deb" ) ]]; then
+          echo "Building on Linux x64 because we have no DEB"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_DEB="no"
+        fi
+
+        if [[ -z $( contains "x86_64.rpm" ) ]]; then
+          echo "Building on Linux x64 because we have no RPM"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_RPM="no"
+        fi
+
+        if [[ -z $( contains "${APP_NAME}-linux-x64-${RELEASE_VERSION}.tar.gz" ) ]]; then
+          echo "Building on Linux x64 because we have no TAR"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_TAR="no"
+        fi
+
+        if [[ -z $( contains "x86_64.AppImage" ) ]]; then
+          echo "Building on Linux x64 because we have no AppImage"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_APPIMAGE="no"
+        fi
+
+        if [[ "${CHECK_REH}" != "no" && -z $( contains "${APP_NAME_LC}-reh-linux-x64-${RELEASE_VERSION}.tar.gz" ) ]]; then
+          echo "Building on Linux x64 because we have no REH archive"
+          export SHOULD_BUILD="yes"
+        else
+          export SHOULD_BUILD_REH="no"
+        fi
+
+        if [[ "${SHOULD_BUILD}" != "yes" ]]; then
+          echo "Already have all the Linux x64 builds"
+        fi
       fi
     fi
   fi
@@ -346,12 +394,12 @@ else
   if [[ "${IS_SPEARHEAD}" == "yes" ]]; then
     export SHOULD_BUILD_SRC="yes"
   elif [[ "${OS_NAME}" == "linux" ]]; then
-    if [[ "${VSCODE_ARCH}" == "ppc64le" ]]; then
+    if [[ "${VSCODE_ARCH}" == "ppc64le" || "${VSCODE_ARCH}" == "riscv64" ]]; then
       SHOULD_BUILD_DEB="no"
-      SHOULD_BUILD_APPIMAGE="no"
       SHOULD_BUILD_RPM="no"
       SHOULD_BUILD_TAR="no"
-    elif [[ "${VSCODE_ARCH}" != "x64" ]]; then
+    fi
+    if [[ "${VSCODE_ARCH}" != "x64" ]]; then
       export SHOULD_BUILD_APPIMAGE="no"
     fi
   elif [[ "${OS_NAME}" == "windows" ]]; then

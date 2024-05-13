@@ -33,20 +33,3 @@ index ebc4749..18fd732 100644
 +export function isHostedGitHubEnterprise(_uri: Uri): boolean {
 +	return false;
  }
-diff --git a/src/vs/workbench/services/authentication/browser/authenticationService.ts b/src/vs/workbench/services/authentication/browser/authenticationService.ts
-index 7ad8444..6020185 100644
---- a/src/vs/workbench/services/authentication/browser/authenticationService.ts
-+++ b/src/vs/workbench/services/authentication/browser/authenticationService.ts
-@@ -279,12 +279,2 @@ export class AuthenticationService extends Disposable implements IAuthentication
- 		}
--
--		if (!this._authenticationProviders.size) {
--			placeholderMenuItem = MenuRegistry.appendMenuItem(MenuId.AccountsContext, {
--				command: {
--					id: 'noAuthenticationProviders',
--					title: nls.localize('loading', "Loading..."),
--					precondition: ContextKeyExpr.false()
--				},
--			});
--		}
- 	}

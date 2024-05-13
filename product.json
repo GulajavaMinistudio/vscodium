@@ -53,6 +53,9 @@
     "VisualStudioExptTeam.vscodeintellicode-completions": [
       "inlineCompletionsAdditions"
     ],
+    "ms-toolsai.datawrangler": [
+      "debugFocus"
+    ],
     "ms-vsliveshare.vsliveshare": [
       "contribMenuBarHome",
       "contribShareMenu",
@@ -80,12 +83,12 @@
       "contribEditorContentMenu",
       "quickPickSortByLabel",
       "portsAttributes",
-      "registerIssueDataProvider",
       "testObserver",
       "quickPickItemTooltip",
       "terminalDataWriteEvent",
       "terminalExecuteCommandEvent",
-      "saveEditor"
+      "contribIssueReporter",
+      "terminalShellIntegration"
     ],
     "ms-dotnettools.dotnet-interactive-vscode": [
       "notebookMessaging"
@@ -174,18 +177,26 @@
       "speech"
     ],
     "GitHub.vscode-pull-request-github": [
-      "contribCommentThreadAdditionalMenu",
-      "tokenInformation",
-      "contribShareMenu",
-      "fileComments",
-      "contribCommentPeekContext",
+      "activeComment",
       "codiconDecoration",
-      "diffCommand",
+      "codeActionRanges",
+      "commentingRangeHint",
+      "commentReactor",
+      "commentThreadApplicability",
+      "contribAccessibilityHelpContent",
       "contribCommentEditorActionsMenu",
-      "readonlyMessage",
-      "treeViewMarkdownMessage",
+      "contribCommentPeekContext",
+      "contribCommentThreadAdditionalMenu",
+      "contribCommentsViewThreadMenus",
+      "contribEditorContentMenu",
+      "contribShareMenu",
+      "diffCommand",
+      "fileComments",
+      "quickDiffProvider",
       "shareProvider",
-      "quickDiffProvider"
+      "tabInputTextMerge",
+      "tokenInformation",
+      "treeViewMarkdownMessage"
     ],
     "GitHub.copilot": [
       "inlineCompletionsAdditions"
@@ -194,26 +205,27 @@
       "inlineCompletionsAdditions"
     ],
     "GitHub.copilot-chat": [
-      "handleIssueUri",
       "interactive",
-      "interactiveUserActions",
       "terminalDataWriteEvent",
       "terminalExecuteCommandEvent",
       "terminalSelection",
       "terminalQuickFixProvider",
-      "chatVariables",
-      "chatAgents2",
-      "chatAgents2Additions",
-      "defaultChatAgent",
-      "readonlyMessage",
+      "chatParticipant",
+      "chatParticipantAdditions",
+      "defaultChatParticipant",
+      "chatVariableResolver",
       "chatProvider",
       "mappedEditsProvider",
       "aiRelatedInformation",
       "codeActionAI",
       "findTextInFiles",
       "textSearchProvider",
-      "scmInputBoxValueProvider",
-      "contribSourceControlInputBoxMenu"
+      "contribSourceControlInputBoxMenu",
+      "newSymbolNamesProvider",
+      "findFiles2",
+      "extensionsAny",
+      "authLearnMore",
+      "testObserver"
     ],
     "GitHub.remotehub": [
       "contribRemoteHelp",
@@ -237,7 +249,9 @@
       "notebookCellExecutionState"
     ],
     "ms-python.debugpy": [
-      "portsAttributes"
+      "portsAttributes",
+      "contribIssueReporter",
+      "debugVisualization"
     ],
     "ms-toolsai.jupyter-renderers": [
       "contribNotebookStaticPreloads"
@@ -254,7 +268,9 @@
       "notebookControllerAffinityHidden",
       "contribNotebookStaticPreloads",
       "quickPickItemTooltip",
-      "notebookExecution"
+      "notebookExecution",
+      "notebookCellExecution",
+      "notebookVariableProvider"
     ],
     "dbaeumer.vscode-eslint": [
       "notebookCellExecutionState"
@@ -290,6 +306,10 @@
     "microsoft-IsvExpTools.powerplatform-vscode-preview": [
       "fileSearchProvider",
       "textSearchProvider"
+    ],
+    "apidev.azure-api-center": [
+      "chatParticipant",
+      "languageModels"
     ],
     "jeanp413.open-remote-ssh": [
       "resolvers",

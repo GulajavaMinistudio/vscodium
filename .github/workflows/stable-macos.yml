@@ -9,6 +9,9 @@ on:
       generate_assets:
         type: boolean
         description: Generate assets
+      checkout_pr:
+        type: string
+        description: Checkout PR
   repository_dispatch:
     types: [stable]
   push:
@@ -38,6 +41,7 @@ jobs:
         include:
           - runner: macos-12
             vscode_arch: x64
+          # - runner: macos-14
           - runner: [self-hosted, macOS, ARM64]
             vscode_arch: arm64
 
@@ -56,6 +60,8 @@ jobs:
         if: env.VSCODE_ARCH == 'x64'
 
       - name: Clone VSCode repo
+        env:
+          PULL_REQUEST_ID: ${{ github.event.inputs.checkout_pr }}
         run: . get_repo.sh
 
       - name: Check PR or cron
@@ -96,6 +102,14 @@ jobs:
           GITHUB_USERNAME: ${{ github.repository_owner }}
         run: ./update_version.sh
         if: env.SHOULD_DEPLOY == 'yes'
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: bin-${{ matrix.vscode_arch }}
+          path: assets/
+          retention-days: 3
+        if: env.SHOULD_BUILD == 'yes' && env.SHOULD_DEPLOY == 'no' && github.event.inputs.generate_assets == 'true'
 
       - name: Clean up keychain
         if: always()

@@ -9,6 +9,9 @@ on:
       generate_assets:
         type: boolean
         description: Generate assets
+      checkout_pr:
+        type: string
+        description: Checkout PR
   repository_dispatch:
     types: [stable]
   push:
@@ -64,6 +67,8 @@ jobs:
           python-version: '3.11'
 
       - name: Clone VSCode repo
+        env:
+          PULL_REQUEST_ID: ${{ github.event.inputs.checkout_pr }}
         run: ./get_repo.sh
 
       - name: Check PR or cron
@@ -75,7 +80,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./check_tags.sh
-        if: env.SHOULD_DEPLOY == 'yes'
+        if: env.SHOULD_DEPLOY == 'yes' || github.event.inputs.generate_assets == 'true'
 
       - name: Build
         env:
@@ -103,6 +108,14 @@ jobs:
           GITHUB_USERNAME: ${{ github.repository_owner }}
         run: ./update_version.sh
         if: env.SHOULD_DEPLOY == 'yes'
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: bin-${{ matrix.vscode_arch }}
+          path: assets/
+          retention-days: 3
+        if: env.SHOULD_BUILD == 'yes' && env.SHOULD_DEPLOY == 'no' && github.event.inputs.generate_assets == 'true'
 
   winget:
     needs: build

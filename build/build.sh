@@ -6,6 +6,7 @@
 ###
 
 export APP_NAME="VSCodium"
+export BINARY_NAME="codium"
 export CI_BUILD="no"
 export SHOULD_BUILD="yes"
 export SKIP_ASSETS="yes"
@@ -13,10 +14,12 @@ export SKIP_BUILD="no"
 export SKIP_SOURCE="no"
 export VSCODE_LATEST="no"
 export VSCODE_QUALITY="stable"
+export VSCODE_SKIP_NODE_VERSION_CHECK="yes"
 
 while getopts ":ilops" opt; do
   case "$opt" in
     i)
+      export BINARY_NAME="codium-insiders"
       export VSCODE_QUALITY="insider"
       ;;
     l)
@@ -54,9 +57,13 @@ if [[ "${UNAME_ARCH}" == "arm64" ]]; then
   export VSCODE_ARCH="arm64"
 elif [[ "${UNAME_ARCH}" == "ppc64le" ]]; then
   export VSCODE_ARCH="ppc64le"
+elif [[ "${UNAME_ARCH}" == "riscv64" ]]; then
+  export VSCODE_ARCH="riscv64"
 else
   export VSCODE_ARCH="x64"
 fi
+
+export NODE_OPTIONS="--max-old-space-size=8192"
 
 echo "OS_NAME=\"${OS_NAME}\""
 echo "SKIP_SOURCE=\"${SKIP_SOURCE}\""
