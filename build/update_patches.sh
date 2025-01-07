@@ -12,69 +12,69 @@ while getopts ":i" opt; do
   esac
 done
 
+check_file() {
+  while [ $# -gt 1 ]; do
+    git apply --reject "${1}"
+
+    shift
+  done
+
+  if [[ -f "${1}" ]]; then
+    echo applying patch: "${1}"
+    if ! git apply --ignore-whitespace "${1}"; then
+      echo failed to apply patch "${1}"
+
+      git apply --reject "${1}"
+      git apply --reject "../patches/helper/settings.patch"
+
+      read -rp "Press any key when the conflict have been resolved..." -n1 -s
+
+      git restore .vscode/settings.json
+      git add .
+      git diff --staged -U1 > "${1}"
+    fi
+    git add .
+    git reset -q --hard HEAD
+  fi
+}
+
 cd vscode || { echo "'vscode' dir not found"; exit 1; }
 
 git add .
 git reset -q --hard HEAD
 
 for FILE in ../patches/*.patch; do
-  if [[ -f "${FILE}" ]]; then
-    echo applying patch: "${FILE}"
-    if ! git apply --ignore-whitespace "${FILE}"; then
-      echo failed to apply patch "${FILE}"
-
-      git apply --reject "${FILE}"
-      git apply --reject "../patches/helper/settings.patch"
-
-      read -rp "Press any key when the conflict have been resolved..." -n1 -s
-
-      git restore .vscode/settings.json
-      git add .
-      git diff --staged -U1 > "${FILE}"
-    fi
-    git add .
-    git reset -q --hard HEAD
-  fi
+  check_file "${FILE}"
 done
 
 if [[ "${VSCODE_QUALITY}" == "insider" ]]; then
   for FILE in ../patches/insider/*.patch; do
-    if [[ -f "${FILE}" ]]; then
-      echo applying patch: "${FILE}"
-      if ! git apply --ignore-whitespace "${FILE}"; then
-        echo failed to apply patch "${FILE}"
-
-        git apply --reject "${FILE}"
-        git apply --reject "../patches/helper/settings.patch"
-
-        read -rp "Press any key when the conflict have been resolved..." -n1 -s
-
-        git restore .vscode/settings.json
-        git add .
-        git diff --staged -U1 > "${FILE}"
-      fi
-      git add .
-      git reset -q --hard HEAD
-    fi
+    check_file "${FILE}"
   done
 fi
 
-for FILE in ../patches/linux/*.patch; do
-  if [[ -f "${FILE}" ]]; then
-    echo applying patch: "${FILE}"
-    if ! git apply --ignore-whitespace "${FILE}"; then
-      echo failed to apply patch "${FILE}"
-
-      git apply --reject "${FILE}"
-      git apply --reject "../patches/helper/settings.patch"
-
-      read -rp "Press any key when the conflict have been resolved..." -n1 -s
-
-      git restore .vscode/settings.json
-      git add .
-      git diff --staged -U1 > "${FILE}"
+for ARCH in alpine linux osx windows; do
+  for FILE in "../patches/${ARCH}/"*.patch; do
+    if [[ "${FILE}" != *"/arch-"* ]]; then
+      check_file "${FILE}"
     fi
-    git add .
-    git reset -q --hard HEAD
+  done
+
+  if [[ "${ARCH}" == "linux" ]]; then
+    check_file "../patches/linux/arch-0-support.patch"
+    check_file "../patches/linux/arch-0-support.patch" "../patches/linux/arch-1-ppc64le.patch"
+    check_file "../patches/linux/arch-0-support.patch" "../patches/linux/arch-1-ppc64le.patch" "../patches/linux/arch-2-riscv64.patch"
+    check_file "../patches/linux/arch-0-support.patch" "../patches/linux/arch-1-ppc64le.patch" "../patches/linux/arch-2-riscv64.patch" "../patches/linux/arch-3-loong64.patch"
+    check_file "../patches/linux/arch-0-support.patch" "../patches/linux/arch-1-ppc64le.patch" "../patches/linux/arch-2-riscv64.patch" "../patches/linux/arch-3-loong64.patch" "../patches/linux/arch-4-s390x.patch"
   fi
+
+  for TARGET in client reh; do
+    for FILE in "../patches/${ARCH}/${TARGET}/"*.patch; do
+      check_file "${FILE}"
+    done
+
+    for FILE in "../patches/${ARCH}/${TARGET}/"*/*.patch; do
+      check_file "${FILE}"
+    done
+  done
 done

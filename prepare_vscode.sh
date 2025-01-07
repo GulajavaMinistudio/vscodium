@@ -77,36 +77,22 @@ if [[ "${OS_NAME}" == "linux" ]]; then
    if [[ "${npm_config_arch}" == "arm" ]]; then
     export npm_config_arm_version=7
   fi
-
-  CHILD_CONCURRENCY=1 yarn --frozen-lockfile --check-files --network-timeout 180000
-elif [[ "${OS_NAME}" == "osx" ]]; then
-  CHILD_CONCURRENCY=1 yarn --frozen-lockfile --network-timeout 180000
-
-  yarn postinstall
-else
-  # TODO: Should be replaced with upstream URL once https://github.com/nodejs/node-gyp/pull/2825
-  # gets merged.
-  rm -rf .build/node-gyp
-  mkdir -p .build/node-gyp
-  cd .build/node-gyp
-
-  git config --global user.email "$( echo "${GITHUB_USERNAME}" | awk '{print tolower($0)}' )-ci@not-real.com"
-  git config --global user.name "${GITHUB_USERNAME} CI"
-  git clone https://github.com/nodejs/node-gyp.git .
-  git checkout v10.0.1
-  npm install
-
-  npm_config_node_gyp="$( pwd )/bin/node-gyp.js"
-  export npm_config_node_gyp
-
-  cd ../..
-
+elif [[ "${OS_NAME}" == "windows" ]]; then
   if [[ "${npm_config_arch}" == "arm" ]]; then
     export npm_config_arm_version=7
   fi
-
-  CHILD_CONCURRENCY=1 yarn --frozen-lockfile --check-files --network-timeout 180000
 fi
+
+for i in {1..5}; do # try 5 times
+  npm ci && break
+  if [[ $i == 3 ]]; then
+    echo "Npm install failed too many times" >&2
+    exit 1
+  fi
+  echo "Npm install failed $i, trying again..."
+
+  sleep $(( 15 * (i + 1)))
+done
 
 setpath() {
   local jsonTmp
@@ -237,16 +223,16 @@ if [[ "${OS_NAME}" == "linux" ]]; then
 
   # control.template
   sed -i 's|Microsoft Corporation <vscode-linux@microsoft.com>|VSCodium Team https://github.com/VSCodium/vscodium/graphs/contributors|'  resources/linux/debian/control.template
-  sed -i 's|https://code.visualstudio.com|https://vscodium.com|' resources/linux/debian/control.template
   sed -i 's|Visual Studio Code|VSCodium|g' resources/linux/debian/control.template
   sed -i 's|https://code.visualstudio.com/docs/setup/linux|https://github.com/VSCodium/vscodium#download-install|' resources/linux/debian/control.template
+  sed -i 's|https://code.visualstudio.com|https://vscodium.com|' resources/linux/debian/control.template
 
   # code.spec.template
-  sed -i 's|https://code.visualstudio.com/docs/setup/linux|https://github.com/VSCodium/vscodium#download-install|' resources/linux/rpm/code.spec.template
   sed -i 's|Microsoft Corporation|VSCodium Team|' resources/linux/rpm/code.spec.template
   sed -i 's|Visual Studio Code Team <vscode-linux@microsoft.com>|VSCodium Team https://github.com/VSCodium/vscodium/graphs/contributors|' resources/linux/rpm/code.spec.template
-  sed -i 's|https://code.visualstudio.com|https://vscodium.com|' resources/linux/rpm/code.spec.template
   sed -i 's|Visual Studio Code|VSCodium|' resources/linux/rpm/code.spec.template
+  sed -i 's|https://code.visualstudio.com/docs/setup/linux|https://github.com/VSCodium/vscodium#download-install|' resources/linux/rpm/code.spec.template
+  sed -i 's|https://code.visualstudio.com|https://vscodium.com|' resources/linux/rpm/code.spec.template
 
   # snapcraft.yaml
   sed -i 's|Visual Studio Code|VSCodium|'  resources/linux/rpm/code.spec.template

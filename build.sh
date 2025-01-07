@@ -29,12 +29,16 @@ if [[ "${SHOULD_BUILD}" == "yes" ]]; then
 
     VSCODE_PLATFORM="darwin"
   elif [[ "${OS_NAME}" == "windows" ]]; then
-    . ../build/windows/rtf/make.sh
+    # in CI, packaging will be done by a different job
+    if [[ "${CI_BUILD}" == "no" ]]; then
+      . ../build/windows/rtf/make.sh
 
-    yarn gulp "vscode-win32-${VSCODE_ARCH}-min-ci"
+      yarn gulp "vscode-win32-${VSCODE_ARCH}-min-ci"
 
-    if [[ "${VSCODE_ARCH}" != "ia32" && "${VSCODE_ARCH}" != "x64" ]]; then
-      SHOULD_BUILD_REH="no"
+      if [[ "${VSCODE_ARCH}" != "x64" ]]; then
+        SHOULD_BUILD_REH="no"
+        SHOULD_BUILD_REH_WEB="no"
+      fi
     fi
 
     VSCODE_PLATFORM="win32"
@@ -50,12 +54,13 @@ if [[ "${SHOULD_BUILD}" == "yes" ]]; then
   fi
 
   if [[ "${SHOULD_BUILD_REH}" != "no" ]]; then
-    if [[ "${OS_NAME}" == "linux" ]]; then
-      export VSCODE_NODE_GLIBC='-glibc-2.17'
-    fi
-
     yarn gulp minify-vscode-reh
     yarn gulp "vscode-reh-${VSCODE_PLATFORM}-${VSCODE_ARCH}-min-ci"
+  fi
+
+  if [[ "${SHOULD_BUILD_REH_WEB}" != "no" ]]; then
+    yarn gulp minify-vscode-reh-web
+    yarn gulp "vscode-reh-web-${VSCODE_PLATFORM}-${VSCODE_ARCH}-min-ci"
   fi
 
   cd ..
